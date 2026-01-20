@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<!-- saved from url=(0060)file:///Users/jaesungwoo/Downloads/songform-converter_1.html -->
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>찬양 송폼 변환기</title>
+    <script src="./찬양 송폼 변환기_files/pdf.min.js"></script>
+    <script src="./찬양 송폼 변환기_files/jszip.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            margin: 30px;
+            padding: 60px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-zone:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-zone.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .result-section {
+            padding: 30px;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn.copied {
+            background: #10b981;
+        }
+
+        .result-box {
+            background: #f8f9ff;
+            border: 1px solid #e0e7ff;
+            border-radius: 12px;
+            padding: 24px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #333;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .reset-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 12px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 30px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 찬양 송폼 변환기</h1>
+            <p>PDF/PPTX 파일을 드래그하면 카톡 메시지로 자동 변환됩니다</p>
+        </div>
+
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">파일을 드래그하거나 클릭하세요</div>
+            <div class="upload-hint">PDF 또는 PPTX 파일</div>
+            <input type="file" id="fileInput" accept=".pdf,.pptx">
+        </div>
+
+        <div class="error" id="errorBox"></div>
+
+        <div class="result-section" id="resultSection">
+            <div class="result-header">
+                <div class="result-title">변환 결과</div>
+                <button class="copy-btn" id="copyBtn">📋 복사하기</button>
+            </div>
+            <div class="result-box" id="resultBox"></div>
+            <button class="reset-btn" id="resetBtn">다시 변환하기</button>
+        </div>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const resultSection = document.getElementById('resultSection');
+        const resultBox = document.getElementById('resultBox');
+        const copyBtn = document.getElementById('copyBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const errorBox = document.getElementById('errorBox');
+
+        // 드래그 앤 드롭
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        uploadZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+
+        // 파일 처리
+        async function handleFile(file) {
+            errorBox.classList.remove('show');
+            
+            const fileName = file.name.toLowerCase();
+            
+            try {
+                let text = '';
+                
+                if (fileName.endsWith('.pdf')) {
+                    text = await extractTextFromPDF(file);
+                } else if (fileName.endsWith('.pptx')) {
+                    text = await extractTextFromPPTX(file);
+                } else {
+                    showError('PDF 또는 PPTX 파일만 지원됩니다.');
+                    return;
+                }
+
+                console.log('추출된 텍스트:', text);
+
+                const songs = parseSongs(text);
+                console.log('파싱된 곡들:', songs);
+                
+                if (songs.length === 0) {
+                    showError('송폼 정보를 찾을 수 없습니다.');
+                    return;
+                }
+
+                const dateStr = extractDate(file.name);
+                const message = formatKakaoMessage(songs, dateStr);
+                
+                showResult(message);
+            } catch (error) {
+                console.error('에러:', error);
+                showError('파일 처리 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // PDF 텍스트 추출
+        async function extractTextFromPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            let fullText = '';
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                fullText += pageText + '\n';
+            }
+
+            return fullText;
+        }
+
+        // PPTX 텍스트 추출
+        async function extractTextFromPPTX(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const zip = await JSZip.loadAsync(arrayBuffer);
+            let fullText = '';
+
+            const slideFiles = Object.keys(zip.files)
+                .filter(name => name.startsWith('ppt/slides/slide') && name.endsWith('.xml'))
+                .sort();
+
+            for (const slideName of slideFiles) {
+                const content = await zip.files[slideName].async('text');
+                const matches = content.matchAll(/<a:t[^>]*>([^<]+)<\/a:t>/g);
+                for (const match of matches) {
+                    fullText += match[1] + ' ';
+                }
+                fullText += '\n';
+            }
+
+            return fullText;
+        }
+
+        // 송폼 파싱
+        function parseSongs(text) {
+            const songs = [];
+            const seen = new Set();
+            
+            // 줄바꿈으로 분리
+            const lines = text.split(/[\n\r]+/);
+            
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+                
+                // 이 줄에서 _키 패턴 찾기
+                const titleKeyMatch = trimmed.match(/([가-힣\s]+?)_([A-G](?:#|b)?)/);
+                if (!titleKeyMatch) continue;
+                
+                let title = titleKeyMatch[1].trim();
+                const key = titleKeyMatch[2];
+                const titleIndex = titleKeyMatch.index;
+                
+                // 제목에서 송폼 관련 단어 제거 (기도, 간주 등)
+                title = title.replace(/^(기도|간주)\s+/, '').trim();
+                
+                // 제목 공백 정리 (연속된 공백을 하나로)
+                title = title.replace(/\s+/g, ' ').trim();
+                
+                // 제목 뒷부분에서 Key-up 정보 찾기
+                const afterTitle = trimmed.substring(titleIndex + titleKeyMatch[0].length);
+                const keyUpMatch = afterTitle.match(/\(Key[-\s]?up[^)]*\)/i);
+                const keyUpInfo = keyUpMatch ? keyUpMatch[0] : null;
+                
+                // 제목 앞부분이 송폼
+                const form = trimmed.substring(0, titleIndex).trim();
+                
+                if (form) {
+                    const songKey = `${title}_${key}`;
+                    
+                    // 중복 체크 - 같은 곡이면 첫 번째만 사용
+                    if (!seen.has(songKey)) {
+                        songs.push({ title, key, form, keyUpInfo });
+                        seen.add(songKey);
+                    }
+                }
+            }
+            
+            console.log('최종 파싱된 곡들:', songs);
+            return songs;
+        }
+
+        // 송폼 변환 및 줄바꿈
+        function convertSongForm(form) {
+            // Int/Out/Itr 변환
+            form = form.replace(/Int\s*\((\d+)\)/gi, "Intro$1'");
+            form = form.replace(/Int'/gi, "Intro'");
+            form = form.replace(/\bInt\b/gi, "Intro");
+            
+            form = form.replace(/Out\s*\((\d+)\)/gi, "Outro$1'");
+            form = form.replace(/Out'/gi, "Outro'");
+            form = form.replace(/\bOut\b/gi, "Outro");
+            
+            form = form.replace(/Itr\s*\((\d+)\)/gi, "Inter$1'");
+            form = form.replace(/Itr'/gi, "Inter'");
+            form = form.replace(/\bItr\b/gi, "Inter");
+            
+            // * → x
+            form = form.replace(/\*/g, 'x');
+            
+            // x 앞뒤 공백 제거 (C x 2 → Cx2)
+            form = form.replace(/\s*x\s*/g, 'x');
+            
+            // 괄호 안의 하이픈 보호
+            const protectedForm = form.replace(/\([^)]+\)/g, (match) => {
+                return match.replace(/-/g, '§§DASH§§');
+            });
+            
+            // - 기준으로 분리
+            const parts = protectedForm.split('-').map(p => p.trim()).filter(p => p);
+            
+            // 보호한 하이픈 복원
+            const restoredParts = parts.map(p => p.replace(/§§DASH§§/g, '-'));
+            
+            // 섹션 추출 함수
+            const getSectionBase = (p) => {
+                const match = p.match(/^(\d*)([A-E])/);
+                return match ? match[2] : null;
+            };
+            
+            // 줄바꿈 규칙
+            const lines = [];
+            let currentLine = [];
+            
+            for (let i = 0; i < restoredParts.length; i++) {
+                const part = restoredParts[i];
+                
+                // Intro/Outro는 단독 줄
+                if (part.startsWith('Intro') || part.startsWith('Outro')) {
+                    if (currentLine.length > 0) {
+                        lines.push(currentLine.join(' - '));
+                        currentLine = [];
+                    }
+                    lines.push(part);
+                    continue;
+                }
+                
+                // Inter, 간주도 단독 줄
+                if (part.startsWith('Inter') || part === '간주') {
+                    if (currentLine.length > 0) {
+                        lines.push(currentLine.join(' - '));
+                        currentLine = [];
+                    }
+                    lines.push(part);
+                    continue;
+                }
+                
+                // 현재 라인에 추가
+                currentLine.push(part);
+                
+                // 괄호가 있는 파트면 줄바꿈 (특수 처리)
+                const hasParen = part.includes('(') && part.includes(')');
+                
+                // 현재 줄의 섹션들
+                const currentSections = currentLine.map(getSectionBase).filter(Boolean);
+                
+                // 줄바꿈 판단
+                let shouldBreak = false;
+                
+                // 1. 같은 줄에 같은 섹션이 2번 나오면 줄바꿈
+                const sectionCounts = {};
+                for (const sec of currentSections) {
+                    sectionCounts[sec] = (sectionCounts[sec] || 0) + 1;
+                    if (sectionCounts[sec] >= 2) {
+                        shouldBreak = true;
+                        break;
+                    }
+                }
+                
+                // 2. 괄호 포함 파트가 있으면 줄바꿈
+                if (!shouldBreak && hasParen && currentLine.length >= 1) {
+                    shouldBreak = true;
+                }
+                
+                if (!shouldBreak && currentLine.length >= 2) {
+                    // 2. 다음 파트 미리보기
+                    const nextPart = i + 1 < restoredParts.length ? restoredParts[i + 1] : null;
+                    
+                    if (currentLine.length >= 3) {
+                        // 3개 모였으면 줄바꿈
+                        shouldBreak = true;
+                    } else if (currentLine.length === 2 && nextPart) {
+                        const nextSection = getSectionBase(nextPart);
+                        const currentLineSections = currentSections;
+                        
+                        // 다음 섹션이 이미 현재 줄에 있으면 줄바꿈 (반복 아님)
+                        // 다음 섹션이 새로운 섹션이면 계속 (3개까지 모으기)
+                        if (currentLineSections.includes(nextSection)) {
+                            shouldBreak = true;
+                        }
+                    } else if (!nextPart) {
+                        // 마지막이면 줄바꿈
+                        shouldBreak = true;
+                    }
+                }
+                
+                if (shouldBreak) {
+                    lines.push(currentLine.join(' - '));
+                    currentLine = [];
+                }
+            }
+            
+            // 남은 것 처리
+            if (currentLine.length > 0) {
+                lines.push(currentLine.join(' - '));
+            }
+            
+            return lines.join('\n');
+        }
+
+        // 날짜 추출
+        function extractDate(filename) {
+            const match = filename.match(/(\d{2})(\d{2})(\d{2})/);
+            if (match) {
+                const month = parseInt(match[2]);
+                const day = parseInt(match[3]);
+                return `${month}월 ${day}일`;
+            }
+            const now = new Date();
+            return `${now.getMonth() + 1}월 ${now.getDate()}일`;
+        }
+
+        // 카톡 메시지 포맷
+        function formatKakaoMessage(songs, dateStr) {
+            let message = `🔘 ${dateStr} 청년예배 송폼🔘\n\n`;
+
+            for (const song of songs) {
+                const keyInfo = song.keyUpInfo ? ` ${song.keyUpInfo}` : '';
+                message += `☑️ ${song.title} / ${song.key}키${keyInfo}\n`;
+                message += convertSongForm(song.form);
+                message += '\n\n';
+            }
+
+            // 연속된 공백을 하나로 정리
+            message = message.replace(/ {2,}/g, ' ');
+
+            return message;
+        }
+
+        // 결과 표시
+        function showResult(message) {
+            resultBox.textContent = message;
+            uploadZone.style.display = 'none';
+            resultSection.classList.add('show');
+        }
+
+        // 에러 표시
+        function showError(msg) {
+            errorBox.textContent = msg;
+            errorBox.classList.add('show');
+        }
+
+        // 복사 버튼
+        copyBtn.addEventListener('click', async () => {
+            try {
+                // textarea를 임시로 만들어서 복사하는 방법 (더 확실함)
+                const textarea = document.createElement('textarea');
+                textarea.value = resultBox.textContent;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                const success = document.execCommand('copy');
+                document.body.removeChild(textarea);
+                
+                if (success) {
+                    copyBtn.textContent = '✅ 복사완료!';
+                    copyBtn.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        copyBtn.textContent = '📋 복사하기';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                } else {
+                    throw new Error('복사 실패');
+                }
+            } catch (err) {
+                // 실패하면 텍스트 선택만이라도
+                const range = document.createRange();
+                range.selectNode(resultBox);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                alert('복사 버튼이 작동하지 않습니다. 텍스트가 선택되었으니 Cmd+C로 복사해주세요.');
+            }
+        });
+
+        // 리셋 버튼
+        resetBtn.addEventListener('click', () => {
+            uploadZone.style.display = 'block';
+            resultSection.classList.remove('show');
+            errorBox.classList.remove('show');
+            fileInput.value = '';
+        });
+    </script>
+
+
+</body></html>
