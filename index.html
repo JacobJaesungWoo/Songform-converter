@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- saved from url=(0060)file:///Users/jaesungwoo/Downloads/songform-converter_1.html -->
-<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>찬양 송폼 변환기</title>
-    <script src="./찬양 송폼 변환기_files/pdf.min.js"></script>
-    <script src="./찬양 송폼 변환기_files/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -15,12 +15,44 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(75, 0, 130, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            position: relative;
+        }
+        
+        body::before {
+            content: '🎵';
+            position: fixed;
+            font-size: 120px;
+            opacity: 0.03;
+            top: 10%;
+            left: 15%;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        body::after {
+            content: '🎶';
+            position: fixed;
+            font-size: 150px;
+            opacity: 0.03;
+            bottom: 15%;
+            right: 10%;
+            animation: float 25s infinite ease-in-out reverse;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(5deg); }
         }
 
         .container {
@@ -58,6 +90,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             background: #f8f9ff;
+            display: block;
         }
 
         .upload-zone:hover {
@@ -193,12 +226,12 @@
             <p>PDF/PPTX 파일을 드래그하면 카톡 메시지로 자동 변환됩니다</p>
         </div>
 
-        <div class="upload-zone" id="uploadZone">
+        <label for="fileInput" class="upload-zone" id="uploadZone">
             <div class="upload-icon">📁</div>
             <div class="upload-text">파일을 드래그하거나 클릭하세요</div>
             <div class="upload-hint">PDF 또는 PPTX 파일</div>
-            <input type="file" id="fileInput" accept=".pdf,.pptx">
-        </div>
+        </label>
+        <input type="file" id="fileInput" accept=".pdf,.pptx">
 
         <div class="error" id="errorBox"></div>
 
@@ -224,8 +257,6 @@
         const errorBox = document.getElementById('errorBox');
 
         // 드래그 앤 드롭
-        uploadZone.addEventListener('click', () => fileInput.click());
-        
         uploadZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -595,6 +626,5 @@
             fileInput.value = '';
         });
     </script>
-
-
-</body></html>
+</body>
+</html>
